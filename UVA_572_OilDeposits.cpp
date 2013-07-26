@@ -5,7 +5,7 @@ int nRows, nColumns;
 
 void visitSurroundings(int i, int j)
 {
-  int a, b;
+	int a, b;
 	for(a=-1; a<=1; a++)
 	{
 		for(b=-1; b<=1; b++)
@@ -59,6 +59,7 @@ int main()
 				if(grid[i][j] == true && visited[i][j] == false)
 				{
 					counter ++;
+					visited[i][j] = true;
 					for(a=-1; a<=1; a++)
 					{
 						for(b=-1; b<=1; b++)
@@ -78,7 +79,7 @@ int main()
 		}
 		printf("%d\n", counter);
 		scanf("%d %d",&nRows,&nColumns);
-		scanf("%c",&temp);
+		gets(temp);
 	}
 	return 0;
 }
