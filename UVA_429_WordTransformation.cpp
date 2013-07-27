@@ -29,6 +29,8 @@ int getIndex(char* str)
 }
 void tryy(int now, int counter)
 {
+	if(counter >= minCount)
+		return;
 	if(compare(words[now], second) == 0)
 	{
 		if(counter < minCount)
