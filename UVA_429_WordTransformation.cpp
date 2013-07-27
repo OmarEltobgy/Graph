@@ -99,7 +99,10 @@ int main()
 				}
 				second[si] = '\0';
 				minCount = 100000;
-				tryy(getIndex(first), 0);
+				int ffi = getIndex(first);
+				visited[ffi] = 1;
+				tryy(ffi, 0);
+				visited[ffi] = 0;
 				printf("%s %s %d\n", first, second, minCount);
 				gets(temp);
 			}
@@ -110,7 +113,10 @@ int main()
 			{
 				scanf("%s", second);
 				minCount = 100000;
-				tryy(getIndex(first), 0);
+				int ffi = getIndex(first);
+				visited[ffi] = 1;
+				tryy(ffi, 0);
+				visited[ffi] = 0;
 				printf("%s %s %d\n", first, second, minCount);
 			}
 		}
