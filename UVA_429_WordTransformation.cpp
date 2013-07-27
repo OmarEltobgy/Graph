@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 
-int wordsN, minCount, visited[500];
+int wordsN, minCount, visited[500], graph[500][500], nodesConnected[500];
 char words[500][100], first[100], second[100];
 int compare(char* f, char* s)
 {
-  int c = 0;
+	int c = 0;
 	if(strlen(f) != strlen(s))
 		return -1;
 	else
@@ -18,27 +18,36 @@ int compare(char* f, char* s)
 		return c;
 	}
 }
-void tryy(char* now, int counter)
+int getIndex(char* str)
 {
-	if(compare(now, second) == 0)
+	for(int i=0; i<wordsN; i++)
+	{
+		if(compare(words[i], str) == 0)
+			return i;
+	}
+	return -1;
+}
+void tryy(int now, int counter)
+{
+	if(compare(words[now], second) == 0)
 	{
 		if(counter < minCount)
 			minCount = counter;
 		return;
 	}
-	for(int i=0; i<wordsN; i++)
+	for(int i=0; i<nodesConnected[now]; i++)
 	{
-		if(visited[i] == 0 && compare(now, words[i]) == 1)
+		if(visited[graph[now][i]] == 0)
 		{
-			visited[i] = 1;
-			tryy(words[i], counter+1);
-			visited[i] = 0;
+			visited[graph[now][i]] = 1;
+			tryy(graph[now][i], counter+1);
+			visited[graph[now][i]] = 0;
 		}
 	}
 }
 int main()
 {
-	int testN;
+	int testN, i, j;
 	char temp[200];
 	scanf("%d",&testN);
 	while(testN--)
@@ -48,8 +57,22 @@ int main()
 		while(words[wordsN][0] != '*')
 		{
 			visited[wordsN] = 0;
+			nodesConnected[wordsN] = 0;
 			wordsN ++;
 			scanf("%s", words[wordsN]);
+		}
+		for(i=0; i<wordsN-1; i++)
+		{
+			for(j=i+1; j<wordsN; j++)
+			{
+				if(compare(words[i], words[j]) == 1)
+				{
+					graph[i][nodesConnected[i]] = j;
+					nodesConnected[i] ++;
+					graph[j][nodesConnected[j]] = i;
+					nodesConnected[j] ++;
+				}
+			}
 		}
 		if(testN != 0)
 		{
@@ -74,7 +97,7 @@ int main()
 				}
 				second[si] = '\0';
 				minCount = 100000;
-				tryy(first, 0);
+				tryy(getIndex(first), 0);
 				printf("%s %s %d\n", first, second, minCount);
 				gets(temp);
 			}
@@ -85,7 +108,7 @@ int main()
 			{
 				scanf("%s", second);
 				minCount = 100000;
-				tryy(first, 0);
+				tryy(getIndex(first), 0);
 				printf("%s %s %d\n", first, second, minCount);
 			}
 		}
