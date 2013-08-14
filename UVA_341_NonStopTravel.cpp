@@ -11,8 +11,8 @@ typedef vector<ii> vii;
 vector<vii> graph;
 vi distances;
 vi parent;
-priority_queue<ii> pq;
 int source, destination, INF = 10000000;
+priority_queue<ii, vector<ii>, greater<ii> > pq;
 
 void SSSP()
 {
@@ -24,7 +24,9 @@ void SSSP()
 	{
 		p = pq.top();
 		parentN = p.second;
-		parentMinDelay = p.first;
+		parentMinDelay = p.first;	
+		if(parentN == destination)
+			return;	
 		pq.pop();
 		if(distances[parentN] == parentMinDelay)
 		{
@@ -78,6 +80,10 @@ int main()
 		printf("Case %d: Path =", ttt);
 		printPath(destination);
 		printf("; %d second delay\n", distances[destination]);
+		while(!pq.empty())
+		{
+			pq.pop();
+		}
 		for(i=0; i<NI; i++)
 		{
 			graph[i].clear();
