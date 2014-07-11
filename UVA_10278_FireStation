@@ -1,0 +1,174 @@
+#include <iostream>
+#include <stdio.h>
+#include <vector>
+#include <queue>
+#include <string>
+#include <string.h>
+#include <stdlib.h>
+#include <map>
+#include <functional>
+#include <stack>
+#include <math.h>
+#include <iterator>
+using namespace std;
+
+typedef pair<int, int> ii;
+
+int fireStationN, nodesN;
+int fireStationPos[200];
+int first, second, weight;
+int dist[1000];
+int minDistance[1000];
+bool isThereFireStation[1000];
+int INF = 1000000000;
+vector<vector<ii> > adjList;
+
+void parse(string str)
+{
+    int i=0;
+    int output[10];
+    for(int num=0; num<3; num++)
+    {
+        string number = "";
+        while(str[i] != ' ' && i < (int)str.length())
+        {
+            number += str[i];
+            i++;
+        }
+
+        output[num] = atoi(number.c_str());
+
+        while(str[i] == ' ' && i < (int)str.length())
+        {
+            i++;
+        }
+    }
+
+    first = output[0];
+    second = output[1];
+    weight = output[2];
+}
+
+void dijkestra(int s)
+{
+    priority_queue<ii, vector<ii>, greater<ii> > pq;
+    dist[s] = 0;
+    pq.push(ii(0, s)); // Distance, Node
+    while(pq.empty() == false)
+    {
+        ii top = pq.top();
+        int nowNode = top.second;
+        int minDist = top.first;
+        pq.pop();
+        if(minDist == dist[nowNode])
+        {
+            for(int i=0; i<(int)adjList[nowNode].size(); i++)
+            {
+                ii next = adjList[nowNode][i];
+                int nextNode = next.first;
+                int weight = next.second;
+                if(dist[nowNode] + weight < dist[nextNode])
+                {
+                    dist[nextNode] = dist[nowNode] + weight;
+                    pq.push(ii(dist[nextNode], nextNode));
+                }
+            }
+        }
+
+    }
+}
+
+int main()
+{
+    int testN;
+    string str;
+    cin >> testN;
+    for(int tt=0; tt<testN; tt++)
+    {
+        cin >> fireStationN >> nodesN;
+        adjList.clear();
+        adjList.resize(nodesN+1); // 1 to nodesN
+
+        for(int i=1; i<=nodesN; i++)
+        {
+            dist[i] = INF;
+            minDistance[i] = INF;
+            isThereFireStation[i] = false;
+        }
+
+        for(int i=0; i<fireStationN; i++)
+        {
+            cin >> fireStationPos[i];
+            isThereFireStation[fireStationPos[i]] = true;
+        }
+        getline(cin, str); // rest of previous line
+
+        while(getline(cin, str) && str != "")
+        {
+            parse(str);
+            //cout << first << " " << second << " " << weight << endl;
+            adjList[first].push_back(ii(second, weight));
+            adjList[second].push_back(ii(first, weight));
+        }
+
+        for(int node=0; node<fireStationN; node++)
+        {
+            dijkestra(fireStationPos[node]);
+            for(int i=1; i<=nodesN; i++)
+            {
+                minDistance[i] = min(minDistance[i], dist[i]);
+                dist[i] = INF;
+            }
+        }
+
+//Note that we want to find the minimum number fire station that minimize the maximum distance from any intersection to nearest fire station
+//It DON'T need the fire station which minimize the the sum of the distances of any intersection to nearest fire station
+        int maximumDistance = -1;
+        int tempMax, bestNode=1; // we initiate bestNode with 1 in case all nodes have fire station we choose the minimum which is 1
+        int newMinDistance[1000];
+
+        for(int i=1; i<=nodesN; i++)
+        {
+            if(minDistance[i] > maximumDistance)
+            {
+                maximumDistance = minDistance[i];
+            }
+        }
+
+        for(int node=1; node<=nodesN; node++)
+        {
+            if(isThereFireStation[node] == false)
+            {
+                dijkestra(node);
+                tempMax = -1;
+                for(int i=1; i<=nodesN; i++)
+                {
+                    newMinDistance[i] = min(minDistance[i], dist[i]);
+                    dist[i] = INF;
+                }
+
+                tempMax = -1;
+                for(int i=1; i<=nodesN; i++)
+                {
+                    if(newMinDistance[i] > tempMax)
+                    {
+                        tempMax = newMinDistance[i];
+                    }
+                }
+
+                if(tempMax < maximumDistance)
+                {
+                    maximumDistance = tempMax;
+                    bestNode = node;
+                }
+            }
+        }
+
+        cout << bestNode << endl;
+        if(tt != testN-1)
+        {
+            cout << endl;
+        }
+    }
+    return 0;
+}
