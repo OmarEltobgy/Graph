@@ -1,0 +1,255 @@
+#include <iostream>
+#include <stdio.h>
+#include <vector>
+#include <queue>
+#include <string>
+#include <string.h>
+#include <stdlib.h>
+#include <map>
+#include <functional>
+#include <stack>
+#include <math.h>
+#include <iterator>
+
+using namespace std;
+
+int nodesN, startNode, endNode;
+vector<vector<int> > adjList; // contains a list of neighbors to certain node
+                              //[weights are stored in adjMat] as we change a lot in these weights
+int adjMat[200][200];         // the residual weights of edges [we add an subtract and compare to these weights] (capacity-flow)
+//int origianlAdjMat[500][500]; // the original edges no editing is done to this (original capacity(
+bool visited[200];            // needed for BFS
+int parent[200];              // needed for BFS
+int INF = 1000000000;
+int peopleN, stickersN;
+
+void bfs() // we know the startNode and endNode [global variables]
+{
+    queue<int> q;
+
+    visited[startNode] = true;
+    // parent[s] = -1 :D
+    q.push(startNode);
+
+    while(q.empty() == false)
+    {
+        int nowNode = q.front();
+        q.pop();
+
+        if(nowNode == endNode)
+        {
+            return; // Augmenting path found :D :D
+        }
+
+        for(int i=0; i<nodesN; i++)
+        {
+            //int nextNode = adjList[nowNode][i];
+            int nextNode = i;
+            if(adjMat[nowNode][nextNode] > 0 && visited[nextNode] == false) // There must be remaining capacity for the flow
+            {
+                visited[nextNode] = true;
+                parent[nextNode] = nowNode;
+                q.push(nextNode);
+            }
+        }
+    }
+
+    // No augmenting path found :(
+    // whether we found an augmenting path or not will appear when we want to calculate the flow that this path can handle
+}
+
+int augmentPath(int nowNode, int minEdgeTillNow)
+{
+    if(parent[nowNode] == -1)  // sure parent[nowNode] = -1
+    {
+        return minEdgeTillNow;
+    }
+
+    if(parent[nowNode] != -1)
+    {
+        int edgeWeight = adjMat[parent[nowNode]][nowNode];
+
+        int minEdge = augmentPath(parent[nowNode], min(minEdgeTillNow, edgeWeight));
+
+        if(minEdge != INF)
+        {
+            adjMat[parent[nowNode]][nowNode] -= minEdge;
+            adjMat[nowNode][parent[nowNode]] += minEdge;
+        }
+
+        return minEdge;
+    }
+    else // No parent for this node [The Path can't reach the source)
+    {
+        return INF;
+    }
+}
+
+long long solveMaxFlow()
+{
+    long long maxFlow = 0;
+
+    while(true)
+    {
+        for(int i=0; i<nodesN; i++)
+        {
+            visited[i] = false;
+            parent[i]  = -1;   // any sentinel value
+        }
+
+        bfs(); // we know the startNode and endNode [global variables]
+
+        int minEdge = augmentPath(endNode, INF);
+
+        if(minEdge == INF) // No Further Augmenting path found
+        {
+            return maxFlow;
+        }
+        else
+        {
+            maxFlow += minEdge;
+        }
+    }
+}
+
+int main()
+{
+    int testN;
+    cin >> testN;
+    for(int tt=1; tt<=testN; tt++)
+    {
+        cin >> peopleN >> stickersN;
+        nodesN = 1 + stickersN + (peopleN - 1) + 1; //super source, node for each sticker to Bob, node for each of Bob Friends, super sink
+
+        adjList.clear();
+        adjList.resize(nodesN);
+
+        for(int i=0; i<nodesN; i++)
+        {
+            for(int j=0; j<nodesN; j++)
+            {
+                adjMat[i][j] = 0; //Initial Value of all edges is 0 as this indicates that no flow can occur
+                //origianlAdjMat[i][j] = 0;
+            }
+        }
+
+        startNode = 0;
+        endNode = nodesN - 1;
+        // from 1 to stickersN a node for each sticker for Bob then from stickerN+1 to endNode the rest of Bob's Friends
+
+        int total, tempSticker;
+        int first, second, weight;
+        int arr[200]; // stores the number of each sticker for other people
+
+        //For Bob
+        // Connection to super source
+        for(int i=1; i<=stickersN; i++)
+        {
+            arr[i] = 0;
+        }
+        cin >> total;
+        for(int i=0; i<total; i++)
+        {
+            cin >> tempSticker;
+
+            arr[tempSticker] ++;
+        }
+
+        for(int i=1; i<=stickersN; i++)
+        {
+            if(arr[i] > 0)
+            {
+                first = 0;
+                second = i; // Bob's Friend node
+                weight = arr[i]; // Only 1 because when Bob gives this sticker to his friend he will not want to take from this sticker again as he will have one from it
+
+                if(adjMat[first][second] == 0)
+                {
+                    adjList[first].push_back(second);
+                    adjList[second].push_back(first);
+                }
+                adjMat[first][second] += weight;  // We add the weights to handle if there are multiple edges between same nodes
+                //origianlAdjMat[first][second] += weight;
+            }
+        }
+
+        //Rest of Bob's Friends
+        for(int f=0; f<peopleN-1; f++)
+        {
+            for(int i=1; i<=stickersN; i++)
+            {
+                arr[i] = 0;
+            }
+
+            cin >> total;
+
+            for(int i=0; i<total; i++)
+            {
+                cin >> tempSticker;
+                arr[tempSticker] ++;
+            }
+
+            for(int i=1; i<=stickersN; i++)
+            {
+                int BobStickers = adjMat[0][i];
+                int otherStickers = arr[i];
+
+                if(otherStickers == 0) // If Bob's Friend doesn't have from this type so bob can give him this sticker if he can
+                    //Note that there is no restriction that bob now have from this sticker because if he can or he can't 
+                    //because of previous edges the algorithm will handle this 
+                    //However we do this because at first bob may not have from this sticker but with time he can have from it by another exchange
+                {
+                    first = i;
+                    second = (f+1) + stickersN; // Bob's Friend node
+                    weight = 1; // Only 1 because when Bob gives this sticker to his friend he will not want to take from this sticker again as he will have one from it
+                    if(adjMat[first][second] == 0)
+                    {
+                        adjList[first].push_back(second);
+                        adjList[second].push_back(first);
+                    }
+                    adjMat[first][second] += weight;  // We add the weights to handle if there are multiple edges between same nodes
+                    //origianlAdjMat[first][second] += weight;
+                }
+
+                if(otherStickers > 1) // if bob can change this sticker with one of his friends as his Friend has a plenty of this sticker
+                {
+                    first = (f+1) + stickersN; // Bob's Friend node
+                    second = i;
+                    weight = otherStickers-1; // all the stickers that the friend can give as bob can take a sticker that he already have
+
+                    if(adjMat[first][second] == 0)
+                    {
+                        adjList[first].push_back(second);
+                        adjList[second].push_back(first);
+                    }
+                    adjMat[first][second] += weight;  // We add the weights to handle if there are multiple edges between same nodes
+                    //origianlAdjMat[first][second] += weight;
+                }
+            }
+
+        }
+
+        // Connection to super sink
+        // Also for Bob
+        for(int i=1; i<=stickersN; i++)
+        {
+            first = i;
+            second = nodesN-1;
+            weight = 1;
+
+            if(adjMat[first][second] == 0)
+            {
+                adjList[first].push_back(second);
+                adjList[second].push_back(first);
+            }
+            adjMat[first][second] += weight;  // We add the weights to handle if there are multiple edges between same nodes
+            //origianlAdjMat[first][second] += weight;
+        }
+
+        int maxFlow;
+        maxFlow = solveMaxFlow();
+
+        printf("Case #%d: %d\n", tt, maxFlow);
+    }
+    return 0;
+}
