@@ -10,9 +10,9 @@
 #include <queue>
 using namespace std;
 
-long long src=1, dst=2, adjMat[60][60], parent[60], INF=1000000, nodesN, roadsN;
-bool visited[60];
-vector<vector<int> > adjList;
+long long src=1, dst=2, adjMat[200][200], parent[200], INF=1000000000, nodesN, roadsN;
+bool visited[200];
+vector<vector<long long> > adjList;
 void bfs()
 {
 	int top, i, next;
@@ -90,12 +90,12 @@ int main()
 		solve();
 		for(i=1; i<=nodesN; i++)
 		{
-			if(visited[i] == false)
+			if(visited[i] == true)
 			{
 				for(j=0; j<adjList[i].size(); j++)
 				{
 					next = adjList[i][j];
-					if(visited[next] == true)
+					if(visited[next] == false)
 					{
 						printf("%d %d\n", i, next);
 					}
